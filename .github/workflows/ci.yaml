@@ -1,0 +1,31 @@
+name: CI
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - main
+  pull_request: ~
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Determine what has changed
+    outputs:
+      filter: ${{ steps.filter.outputs.changes }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.0
+      - name: Filter for project changes
+        uses: dorny/paths-filter@v2.10.2
+        id: filter
+        with:
+          base: HEAD
+          filters: |
+            alpine-base:
+              - 'alpine-base/**'
